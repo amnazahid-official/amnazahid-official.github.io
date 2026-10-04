@@ -71,8 +71,8 @@ a.btn-ghost:hover{background:rgba(238,223,207,.1)}
 @media (min-width:768px){.portrait{width:460px}}
 @media (min-width:1024px){.portrait{width:580px}}
 .magnet{will-change:transform}
-.tilt{transform-style:preserve-3d;will-change:transform}
-.portrait{perspective:1200px}
+.tilt{will-change:transform;transform-origin:50% 90%}
+
 .float{position:relative;animation:breathe 6s ease-in-out infinite;transform-origin:50% 100%}
 @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.012)}}
 .glow{position:absolute;left:12%;right:12%;top:8%;bottom:10%;border-radius:50%;background:radial-gradient(closest-side,rgba(217,168,119,.32),rgba(217,168,119,0));filter:blur(30px);z-index:-1}
@@ -896,11 +896,11 @@ footer small{color:var(--ink-dim);font-size:.9rem}
   var mg=document.getElementById('magnet'), tl=document.getElementById('tilt'), hero=document.querySelector('.hero');
   if(!reduce){
     var tx=0,ty=0,cx=0,cy=0,raf=null;
-    function maxX(){return Math.min(140,window.innerWidth*0.09);} function maxY(){return Math.min(70,window.innerHeight*0.07);}
+    function maxX(){return Math.min(170,window.innerWidth*0.11);} function maxY(){return Math.min(70,window.innerHeight*0.07);}
     function loop(){
       cx+=(tx-cx)*0.12; cy+=(ty-cy)*0.12;
       mg.style.transform='translate3d('+(cx*maxX()).toFixed(2)+'px,'+(cy*maxY()).toFixed(2)+'px,0)';
-      tl.style.transform='rotateY('+(cx*16).toFixed(2)+'deg) rotateX('+(-cy*9).toFixed(2)+'deg)';
+      tl.style.transform='rotate('+(cx*2.5).toFixed(2)+'deg)'; /* gentle lean only: no 3D turn, so the face never looks squashed */
       if(Math.abs(tx-cx)>0.0005||Math.abs(ty-cy)>0.0005){raf=requestAnimationFrame(loop);}else{raf=null;}
     }
     function kick(){ if(!raf) raf=requestAnimationFrame(loop); }
