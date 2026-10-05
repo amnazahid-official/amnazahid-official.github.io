@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-X/2M+8UQ9ZERl7G7Tv9vdB3k/knaQn2wocFQBg9KWKg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; connect-src https://formspree.io; form-action https://formspree.io; base-uri 'none'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+r3HlWPMlWxOkw9ceRAz+w2AgPv9iwXSA0ba6iZ+zOE=' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com; media-src 'self' data: blob:; font-src 'self' data:; connect-src https://formspree.io https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; form-action https://formspree.io; base-uri 'none'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Amna Zahid | Social Media Marketing Manager &amp; Strategist</title>
@@ -828,8 +828,8 @@ footer{padding-right:calc(1.5rem + 84px)!important}
 </footer>
 </main>
 <div class="cc" id="cc" role="dialog" aria-label="Cookie preferences" hidden>
-  <p><b>Your privacy matters.</b> This site uses analytics cookies to understand visits and improve your experience. They only run if you accept. <a href="privacy.html">Privacy policy</a></p>
-  <div class="cc-btns"><button type="button" class="cc-yes" id="ccYes">Accept</button><button type="button" class="cc-no" id="ccNo">Decline</button></div>
+  <p><b>Cookie preferences</b><br>This website uses analytics cookies to measure performance and improve your browsing experience. They are activated only with your consent. <a href="privacy.html">Privacy policy</a></p>
+  <div class="cc-btns"><button type="button" class="cc-yes" id="ccYes">Accept analytics</button><button type="button" class="cc-no" id="ccNo">Decline</button></div>
 </div>
 
 <!-- Smart assistant -->
@@ -857,6 +857,8 @@ footer{padding-right:calc(1.5rem + 84px)!important}
 
 <script>
 (function(){
+  /* clickjacking protection: on the live site, refuse to be shown inside another website's frame */
+  if(window.top!==window.self && /github\.io$/.test(location.hostname)){ try{ window.top.location=window.location.href; }catch(_){ document.documentElement.style.display='none'; } }
   /* contact details are assembled here so spam bots reading the page source can't harvest them */
   var AZC=(function(){var u=['amnazahid','officialmail'].join('.'),d=['gmail','com'].join('.'),n=['92','324','7533100'];
     return {em:u+String.fromCharCode(64)+d, ph:'+'+n.join(''), phd:'+'+n[0]+' '+n[1]+' '+n[2], wa:n.join('')};})();
@@ -1146,7 +1148,7 @@ footer{padding-right:calc(1.5rem + 84px)!important}
         say('What do you need help with?',['Social media growth','LinkedIn branding','Video editing','Lead generation','Something else']);return;}
       if(flow==='need'){lead.need=text.slice(0,200);flow=null;input.placeholder='Type your question...';
         try{var fd=new FormData();fd.append('name',lead.name);fd.append('email',lead.email);fd.append('message',lead.need);fd.append('source','Website chat assistant');fd.append('_subject','New chat lead: '+lead.name);
-          fetch('https://formspree.io/f/xzedbzvk',{method:'POST',body:fd,headers:{'Accept':'application/json'}}).catch(function(){});}catch(_){}
+          fetch('https://formspree.io/f/xzedbzvk',{method:'POST',body:fd,headers:{'Accept':'application/json'}}).catch(function(){});azTrack('generate_lead',{lead_source:'chat_assistant'});}catch(_){}
         say('Thanks, '+lead.name.split(' ')[0]+'! Your details have been passed on, and you will hear back shortly. To get started faster, book a time or send a message now:',['Services','Results'],'lead');}
     }
     function user(text,fromChip){
@@ -1161,7 +1163,7 @@ footer{padding-right:calc(1.5rem + 84px)!important}
     }
     function open(){
       root.classList.add('open');panel.hidden=false;teaser.hidden=true;launch.setAttribute('aria-expanded','true');
-      if(!started){started=true;add("Hi! I'm Amna's assistant 👋 Ask me about her services, results, or how to book a free consultation.",'bot');setChips(MAIN);}
+      azTrack('chat_open');if(!started){started=true;add("Hi! I'm Amna's assistant 👋 Ask me about her services, results, or how to book a free consultation.",'bot');setChips(MAIN);}
       setTimeout(function(){input.focus({preventScroll:true});},50);
     }
     function close(){root.classList.remove('open');panel.hidden=true;launch.setAttribute('aria-expanded','false');launch.focus({preventScroll:true});}
@@ -1184,24 +1186,40 @@ footer{padding-right:calc(1.5rem + 84px)!important}
     var FORM_ENDPOINT='https://formspree.io/f/xzedbzvk';
     var f=document.getElementById('leadForm'); if(!f) return;
     var st=document.getElementById('lfStatus'), btn=f.querySelector('.lf-btn');
+    var lfStart=Date.now(), lfLast=0;
     function mark(id,bad){var el=document.getElementById(id).parentNode;el.classList.toggle('err',bad);return !bad;}
     f.addEventListener('submit',function(e){
       e.preventDefault(); st.className='lf-status'; st.textContent='';
       var ok=mark('lfName',!f.elements['name'].value.trim()) & mark('lfEmail',!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.elements['email'].value.trim())) & mark('lfNeed',!f.elements['message'].value.trim());
       if(!ok){st.className='lf-status bad';st.textContent='Please fill in your name, a valid email, and what you need help with.';var first=f.querySelector('.err input,.err textarea');if(first)first.focus({preventScroll:true});return;}
+      if(Date.now()-lfStart<3000){st.className='lf-status bad';st.textContent='Please take a moment to review your details, then submit again.';return;}
+      if(Date.now()-lfLast<30000){st.className='lf-status bad';st.textContent='Your inquiry was just sent. Please wait a few seconds before sending another.';return;}
       if(!FORM_ENDPOINT){st.className='lf-status bad';st.textContent='The form is not connected yet. Please book a free session or reach out on WhatsApp.';return;}
       btn.disabled=true; btn.textContent='Sending...';
       fetch(FORM_ENDPOINT,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
-        .then(function(r){ if(r.ok){ f.classList.add('sent'); st.className='lf-status ok'; st.textContent='Thank you, '+f.elements['name'].value.trim().split(' ')[0]+'! Your inquiry has been received, and you will hear back shortly with next steps. To choose a time right away, use "Book a free session" above.'; f.reset(); }
+        .then(function(r){ if(r.ok){ lfLast=Date.now(); azTrack('generate_lead',{lead_source:'contact_form',budget:f.elements['budget'].value||'not set'}); f.classList.add('sent'); st.className='lf-status ok'; st.textContent='Thank you, '+f.elements['name'].value.trim().split(' ')[0]+'! Your inquiry has been received, and you will hear back shortly with next steps. To choose a time right away, use "Book a free session" above.'; f.reset(); }
           else return r.json().then(function(j){throw new Error((j&&j.errors&&j.errors[0]&&j.errors[0].message)||'error');}); })
         .catch(function(){ st.className='lf-status bad'; st.textContent='Sorry, something went wrong. Please try again or reach out on WhatsApp.'; })
         .then(function(){ btn.disabled=false; btn.textContent='Submit inquiry'; });
     });
     ['lfName','lfEmail','lfNeed'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){this.parentNode.classList.remove('err');});});
   })();
+  /* analytics events: only sent when the visitor has accepted analytics */
+  function azTrack(name,params){ try{ if(window.gtag) window.gtag('event',name,params||{}); }catch(_){} }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a,button'); if(!a) return;
+    var href=a.getAttribute('href')||'';
+    if(/calendly\.com/.test(href)) azTrack('book_call_click',{link_location:a.closest('section,footer,.ab')?(a.closest('section,footer,.ab').id||a.closest('section,footer,.ab').className):'page'});
+    else if(a.hasAttribute('data-wa')||/wa\.me/.test(a.href||'')) azTrack('whatsapp_click');
+    else if(a.getAttribute('data-contact')==='email'||/mail\.google|mailto:/.test(a.href||'')) azTrack('email_click');
+    else if(a.getAttribute('data-contact')==='phone'||/^tel:/.test(href)) azTrack('phone_click');
+    else if(/linkedin\.com/.test(href)) azTrack('linkedin_click');
+    else if(/upwork\.com/.test(href)) azTrack('upwork_click');
+  },true);
+  [].slice.call(document.querySelectorAll('.reel video')).forEach(function(v){var once=false;v.addEventListener('play',function(){if(once)return;once=true;azTrack('reel_play',{reel:v.getAttribute('aria-label')||''});});});
   /* consent: analytics load only after "Accept". Add the IDs here to switch analytics on. */
   (function(){
-    var GA_ID='', CLARITY_ID='';
+    var GA_ID='G-P5TGMNJRTR', CLARITY_ID='';
     var cc=document.getElementById('cc'), link=document.getElementById('ccLink');
     if(!GA_ID && !CLARITY_ID){ if(link) link.hidden=true; return; }
     var KEY='az-consent';
@@ -1210,7 +1228,7 @@ footer{padding-right:calc(1.5rem + 84px)!important}
     function load(){
       if(window.__azAnalytics) return; window.__azAnalytics=true;
       if(GA_ID){var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);
-        window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',GA_ID,{anonymize_ip:true});}
+        window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',GA_ID);}
       if(CLARITY_ID){(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script",CLARITY_ID);}
     }
     var c=get(); if(c==='accepted') load(); else if(c!=='declined') setTimeout(function(){cc.hidden=false;},1200);
